@@ -15,36 +15,41 @@ import org.superbiz.moviefun.blobstore.BlobStore;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static java.lang.String.format;
-import static org.springframework.http.MediaType.IMAGE_JPEG_VALUE;
 
-@Controller
+@RestController
 @RequestMapping("/albums")
 public class AlbumsController {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final AlbumsBean albumsBean;
+    private final AlbumsRepository albumsRepository;
     private final BlobStore blobStore;
 
-    public AlbumsController(AlbumsBean albumsBean, BlobStore blobStore) {
-        this.albumsBean = albumsBean;
+    public AlbumsController(AlbumsRepository albumsRepository, BlobStore blobStore) {
+        this.albumsRepository = albumsRepository;
         this.blobStore = blobStore;
     }
 
 
     @GetMapping
-    public String index(Map<String, Object> model) {
-        model.put("albums", albumsBean.getAlbums());
-        return "albums";
+    public List<Album> getAlbums(Map<String, Object> model) {
+        return albumsRepository.getAlbums();
     }
 
+
     @GetMapping("/{albumId}")
-    public String details(@PathVariable long albumId, Map<String, Object> model) {
-        model.put("album", albumsBean.find(albumId));
-        return "albumDetails";
+    public Album getAlbum(@PathVariable long albumId) {
+        return albumsRepository.find(albumId);
+    }
+
+    @PostMapping
+    public Album addAlbum(@RequestBody Album album) {
+        albumsRepository.addAlbum(album);
+        return album;
     }
 
     @PostMapping("/{albumId}/cover")

@@ -1,27 +1,24 @@
 package org.superbiz.moviefun;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.superbiz.moviefun.albums.Album;
-import org.superbiz.moviefun.albums.AlbumFixtures;
-import org.superbiz.moviefun.albums.AlbumsBean;
-import org.superbiz.moviefun.movies.Movie;
-import org.superbiz.moviefun.movies.MovieFixtures;
-import org.superbiz.moviefun.movies.MoviesBean;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.superbiz.moviefun.moviesapi.*;
 
 import java.util.Map;
 
 @Controller
 public class HomeController {
 
-    private final MoviesBean moviesBean;
-    private final AlbumsBean albumsBean;
+    private final MoviesClient moviesClient;
+    private final AlbumsClient albumsClient;
     private final MovieFixtures movieFixtures;
     private final AlbumFixtures albumFixtures;
 
-    public HomeController(MoviesBean moviesBean, AlbumsBean albumsBean, MovieFixtures movieFixtures, AlbumFixtures albumFixtures) {
-        this.moviesBean = moviesBean;
-        this.albumsBean = albumsBean;
+    public HomeController(MoviesClient moviesClient, AlbumsClient albumsClient, MovieFixtures movieFixtures, AlbumFixtures albumFixtures) {
+        this.moviesClient = moviesClient;
+        this.albumsClient = albumsClient;
         this.movieFixtures = movieFixtures;
         this.albumFixtures = albumFixtures;
     }
@@ -33,17 +30,36 @@ public class HomeController {
 
     @GetMapping("/setup")
     public String setup(Map<String, Object> model) {
-        for (Movie movie : movieFixtures.load()) {
-            moviesBean.addMovie(movie);
+        for (MovieInfo movie : movieFixtures.load()) {
+            moviesClient.addMovie(movie);
         }
 
-        for (Album album : albumFixtures.load()) {
-            albumsBean.addAlbum(album);
+        for (AlbumInfo album : albumFixtures.load()) {
+            albumsClient.addAlbum(album);
         }
 
-        model.put("movies", moviesBean.getMovies());
-        model.put("albums", albumsBean.getAlbums());
+        model.put("movies", moviesClient.getMovies());
+        model.put("albums", albumsClient.getAlbums());
 
         return "setup";
     }
+
+    @GetMapping("/albums")
+    public String getAlbums(Map<String, Object> model) {
+        model.put("albums", albumsClient.getAlbums());
+        return "albums";
+    }
+
+    @GetMapping("/albums/{albumId}")
+    public String details(@PathVariable long albumId, Map<String, Object> model) {
+        model.put("album", albumsClient.find(albumId));
+        return "albumDetails";
+    }
+
+    @GetMapping("/moviefun")
+    public String home(Model model) {
+        model.addAttribute("movies", moviesClient.findAll(0, 10));
+        return "moviefun";
+    }
+
 }
